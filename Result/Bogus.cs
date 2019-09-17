@@ -1,6 +1,6 @@
 ﻿namespace Result
 {
-    class Bogus
+    public class Bogus
     {
         public string BogusReason { get; set; }
     }

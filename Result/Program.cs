@@ -6,21 +6,21 @@ namespace Result
     {
         static void Main(string[] args)
         {
-            var gbs1 = new TryFailWithBogus<string>("Lama lama lama lama");
-            var gbs2 = new TryFailWithBogus<string>("alarm, a Lama");
-            var gbb = new TryFailWithBogus<bool>(false);
-            var gbguid = new TryFailWithBogus<Guid>(Guid.NewGuid());
-            var jes = new TryFailWithBogus<decimal>(3.14159m);
+            TryFailWithBogus<string>    animal = ValueFactory.TryGetString("Lama lama lama lama", false);
+            TryFailWithBogus<string>   warning = ValueFactory.TryGetString("alarm, a Lama", false);
+            TryFailWithBogus<bool>    doSwitch = ValueFactory.TryGetBoolean(false, false);
+            TryFailWithBogus<Guid>      userId = ValueFactory.TryGetId(Guid.NewGuid(), false);
+            TryFailWithBogus<decimal> constant = ValueFactory.TryGetNumber(3.14159m, false);
 
-            var qss =
-                from s1 in gbs1
-                from s2 in gbs2
-                from b in gbb
-                from id in gbguid
-                from mig in jes
-                select CombineValues(b, s1, s2, id, mig);
-            var result = qss.Resolve(b => b.BogusReason, x => x);
-            Console.WriteLine(result);
+            var combine =
+                from song in animal
+                from text in warning
+                from shouldToggle in doSwitch
+                from user in userId
+                from pi in constant
+                select CombineValues(shouldToggle, song, text, user, pi);
+            var total = combine.Resolve(b => b.BogusReason, s => s);
+            Console.WriteLine(total);
         }
 
         static string CombineValues(bool printStringLengths, string lamaString, string alarmString, Guid id, decimal pi)
