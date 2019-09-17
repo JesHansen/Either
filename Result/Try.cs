@@ -2,7 +2,7 @@
 
 namespace Result
 {
-    public class Try<E, T>
+    public class Try<E, T> where E: class
     {
         private E Failure { get; }
         private T Ok { get; }
@@ -22,6 +22,18 @@ namespace Result
             return Failure != null ? onError(Failure) : onSuccess(Ok);
         }
 
+        public void Resolve(Action<E> onError, Action<T> onSuccess)
+        {
+            if (Failure != null)
+            {
+                onError(Failure);
+            }
+            else
+            {
+                onSuccess(Ok);
+            }
+        }
+
         private Try<E, A> Map<A>(Func<T, A> mapSucceeded)
         {
             return Failure != null ? new Try<E, A>(Failure) : new Try<E, A>(mapSucceeded(Ok));
@@ -37,7 +49,7 @@ namespace Result
             return Map(map);
         }
 
-        public Try<E, A> SelectMany<B, A>(Func<T, Try<E, B>> mapToTry, Func<T, B, A> reduce)
+        public Try<E, A> SelectMany<A, B>(Func<T, Try<E, B>> mapToTry, Func<T, B, A> reduce)
         {
             return FlatMap(mapToTry).FlatMap(t => new Try<E, A>(reduce(Ok, t)));
         }

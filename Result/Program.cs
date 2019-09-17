@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Result
 {
@@ -20,6 +21,7 @@ namespace Result
                 from pi in constant
                 select CombineValues(shouldToggle, song, text, user, pi);
             var total = combine.Resolve(b => b.BogusReason, s => s);
+            combine.Resolve(b => Console.WriteLine(b.BogusReason), Console.WriteLine);
             Console.WriteLine(total);
         }
 
