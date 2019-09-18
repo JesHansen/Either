@@ -4,32 +4,32 @@ namespace Result
 {
     public static class ValueFactory
     {
-        public static TryFailWithBogus<string> TryGetString(string s, bool fail)
+        public static Result<string> TryGetString(string s, bool fail)
         {
             return fail
-                ? new TryFailWithBogus<string>(new Bogus {BogusReason = "No string was generated"})
-                : new TryFailWithBogus<string>(s);
+                ? new Result<string>(new Failure {Reason = "No string was generated", Type = FailureType.StringNotFound})
+                : new Result<string>(s);
         }
 
-        public static TryFailWithBogus<bool> TryGetBoolean(bool b, bool fail)
+        public static Result<bool> TryGetBoolean(bool b, bool fail)
         {
             return fail
-                ? new TryFailWithBogus<bool>(new Bogus {BogusReason = "The boolean value is missing"})
-                : new TryFailWithBogus<bool>(b);
+                ? new Result<bool>(new Failure {Reason = "The boolean value is missing", Type = FailureType.BooleanNotFound})
+                : new Result<bool>(b);
         }
 
-        public static TryFailWithBogus<decimal> TryGetNumber(decimal d, bool fail)
+        public static Result<decimal> TryGetNumber(decimal d, bool fail)
         {
             return fail
-                ? new TryFailWithBogus<decimal>(new Bogus { BogusReason = "The number was not present." })
-                : new TryFailWithBogus<decimal>(d);
+                ? new Result<decimal>(new Failure { Reason = "The number was not present.", Type = FailureType.DecimalNotFound})
+                : new Result<decimal>(d);
         }
 
-        public static TryFailWithBogus<Guid> TryGetId(Guid id, bool fail)
+        public static Result<Guid> TryGetId(Guid id, bool fail)
         {
             return fail
-                ? new TryFailWithBogus<Guid>(new Bogus { BogusReason = "The ID was not found." })
-                : new TryFailWithBogus<Guid>(id);
+                ? new Result<Guid>(new Failure { Reason = "The ID was not found." , Type = FailureType.GuidNotFound})
+                : new Result<Guid>(id);
         }
     }
 }
