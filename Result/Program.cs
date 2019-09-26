@@ -7,92 +7,180 @@ namespace Result
     {
         static void Main(string[] args)
         {
-            ResultValues();
+            Result<Animal> animal = ValueFactory.TryGetTiger("Cuddles", false);
+            Result<AnimalSafetyRules> safetyRules = ValueFactory.TryGetWarning("it is an Asian Tiger", false);
+            Result<bool> eatsMeat = ValueFactory.TryGetBoolean(true, false);
+            Result<Guid> userId = ValueFactory.TryGetId(Guid.NewGuid(), false);
+            Result<decimal> admissionPrice = ValueFactory.TryGetNumber(31.41m, false);
 
-            // Se også https://fsharpforfunandprofit.com/rop/
+            BruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
+            RefactorBruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
+            SafelyAccessValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
         }
 
-        private static void ResultValues()
+        static string BusinessLogic(Animal animal, AnimalSafetyRules animalAnimalSafetyRules, bool carnivore, Guid userId, decimal ticketPrice)
         {
-            Result<string> animal = ValueFactory.TryGetString("Lama, lama, lama, lama", false);
-            Result<string> warning = ValueFactory.TryGetString("Alarm, a Lama!", false);
-            Result<bool> toggle = ValueFactory.TryGetBoolean(false, false);
-            Result<Guid> userId = ValueFactory.TryGetId(Guid.NewGuid(), true);
-            Result<decimal> constant = ValueFactory.TryGetNumber(3.14159m, false);
+            var sb = new StringBuilder();
+            var glue = carnivore ? "is" : "is not";
 
-            CombineResultValues(animal, warning, toggle, userId, constant);
+            sb.AppendLine($"*** Animal Facts about {animal.Name} ***");
+            sb.AppendLine($"A word of caution. This animal is classed as Danger Level '{animalAnimalSafetyRules.CautionLevel}', because {animalAnimalSafetyRules.SafetyRules}.");
+            sb.AppendLine($"It {glue} a carnivorous animal.");
+            sb.AppendLine($"Information about {animal.Name}, such as its wight, {animal.WeightInKilograms} kg, was last updated by user id {userId}.");
+            sb.AppendLine($"Ticket price to see {animal.Name}: kr. {ticketPrice}");
+
+            return sb.ToString();
         }
 
-        static string BusinessLogic(bool printStringLengths, string animalDescription, string animalWarning, Guid userId, decimal number)
+        private static void BruteForceValues(
+            Result<Animal> probablyAnAnimal,
+            Result<AnimalSafetyRules> probablyRules,
+            Result<bool> probablyDietInfo,
+            Result<Guid> probablyuserId,
+            Result<decimal> probablyTicketPrice)
         {
-            if (printStringLengths)
+            bool somethingFailed = false;
+
+            Animal animal = probablyAnAnimal.Resolve(x => x, e => { somethingFailed = true; return new Animal { Dangerous = Animal.DangerClass.Undefined, Name = "Dummy" }; });
+            if (!somethingFailed)
             {
-                return (animalDescription.Length + animalWarning.Length).ToString();
+                AnimalSafetyRules rules = probablyRules.Resolve(x => x, e => { somethingFailed = true; return new AnimalSafetyRules("Dummy", AnimalSafetyRules.DangerLevel.Benign); });
+                if (!somethingFailed)
+                {
+                    bool isCarnivore = probablyDietInfo.Resolve(x => x, e => { somethingFailed = true; return false; });
+                    if (!somethingFailed)
+                    {
+                        Guid g = probablyuserId.Resolve(x => x, e => { somethingFailed = true; return Guid.Empty; });
+                        if (!somethingFailed)
+                        {
+                            decimal price = probablyTicketPrice.Resolve(x => x, e => { somethingFailed = true; return -1m; });
+                            if (!somethingFailed)
+                            {
+                                var result = BusinessLogic(animal, rules, isCarnivore, g, price);
+                                string summary = $"All went well!\n\n{result}";
+                                Console.WriteLine(summary);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Calculation failed: Unable to communicate with invoice and ticket systems.");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Calculation failed: User not located.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Calculation failed: Carnivore status undetermined.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Calculation failed: Safety procedure rules not located.");
+                }
             }
-            return userId + $" {number}";
+            else
+            {
+                Console.WriteLine("Calculation failed: Retrievel of the animal failed.");
+            }
         }
 
-        private static void CombineResultValues(Result<string> animal, Result<string> warning, Result<bool> toggle, Result<Guid> userId, Result<decimal> constant)
+        private static void RefactorBruteForceValues(
+            Result<Animal> probablyAnAnimal,
+            Result<AnimalSafetyRules> probablyRules,
+            Result<bool> probablyDietInfo,
+            Result<Guid> probablyuserId,
+            Result<decimal> probablyTicketPrice)
         {
-            var (somethingFailed, result) = ForceOutValues(animal, warning, toggle, userId, constant);
+            bool somethingFailed = false;
 
-            var outcome = somethingFailed ? "Could not complete the calculation" : "All went well";
-            string summary = $"{outcome}: {result}";
+            Animal animal = probablyAnAnimal.Resolve(x => x, e => { somethingFailed = true; return new Animal { Dangerous = Animal.DangerClass.Undefined, Name = "Dummy" }; });
+            if (somethingFailed)
+            {
+                Console.WriteLine("Calculation failed: Retrievel of the animal failed.");
+                return;
+            }
+
+            AnimalSafetyRules rules = probablyRules.Resolve(x => x, e => { somethingFailed = true; return new AnimalSafetyRules("Dummy", AnimalSafetyRules.DangerLevel.Benign); });
+            if (somethingFailed)
+            {
+                Console.WriteLine("Calculation failed: Safety procedure rules not located.");
+                return;
+            }
+
+            bool isCarnivore = probablyDietInfo.Resolve(x => x, e => { somethingFailed = true; return false; });
+            if (somethingFailed)
+            {
+                Console.WriteLine("Calculation failed: Carnivore status undetermined.");
+                return;
+            }
+
+            Guid g = probablyuserId.Resolve(x => x, e => { somethingFailed = true; return Guid.Empty; });
+            if (somethingFailed)
+            {
+                Console.WriteLine("Calculation failed: User not located.");
+                return;
+            }
+
+            decimal price = probablyTicketPrice.Resolve(x => x, e => { somethingFailed = true; return -1m; });
+            if (somethingFailed)
+            {
+                Console.WriteLine("Calculation failed: Unable to communicate with invoice and ticket systems.");
+                return;
+            }
+
+            var result = BusinessLogic(animal, rules, isCarnivore, g, price);
+            string summary = $"All went well!\n\n{result}";
             Console.WriteLine(summary);
-
-            var (failed, answer) = UseQuerySyntax(animal, warning, toggle, userId, constant);
-            outcome = failed ? "Could not complete the calculation" : "All went well";
-            summary = $"{outcome}: {answer}";
-            Console.WriteLine(summary);
         }
 
-        private static (bool failed, string result) ForceOutValues(Result<string> animal, Result<string> warning, Result<bool> toggle, Result<Guid> userId, Result<decimal> constant)
+
+
+        private static void SafelyAccessValues(
+            Result<Animal> probablyAnAnimal,
+            Result<AnimalSafetyRules> probablyRules,
+            Result<bool> probablyDietInfo,
+            Result<Guid> probablyuserId,
+            Result<decimal> probablyTicketPrice)
         {
-            bool failed = false;
-            string a = animal.Resolve(e => { failed = true; return e.Reason; }, x => x);
-            if (failed)
-                return (true, a);
+            (bool calculationFailed, string result) outcome;
 
-            string w = warning.Resolve(e => { failed = true; return e.Reason; }, x => x);
-            if (failed)
-                return (true, w);
+            #region impl, ROP and SelectMany
 
-            bool t = toggle.Resolve(e => { failed = true; return false; }, x => x);
-            if (failed)
-                return (true, "No value for toggle.");
-
-            Guid g = userId.Resolve(e => { failed = true; return Guid.Empty; }, x => x);
-            if (failed)
-                return (true, "No value for userId.");
-
-            decimal num = constant.Resolve(e => { failed = true; return -1m; }, x => x);
-            if (failed)
-                return (true, "No value for constant.");
-
-            var result = BusinessLogic(t, a, w, g, num);
-            Console.WriteLine(result);
-            return (false, result);
-        }
-
-        private static (bool failed, string result) UseQuerySyntax(Result<string> animal, Result<string> warning, Result<bool> toggle, Result<Guid> userId, Result<decimal> constant)
-        {
             var combinedValuesOrError =
-                from a in animal
-                from w in warning
-                from t in toggle
-                from u in userId
-                from c in constant
-                select BusinessLogic(t, a, w, u, c);
+                from a in probablyAnAnimal
+                from w in probablyRules
+                from t in probablyDietInfo
+                from u in probablyuserId
+                from c in probablyTicketPrice
+                select BusinessLogic(a, w, t, u, c);
+            outcome = combinedValuesOrError.Resolve(x => (false, x), ParseError);
 
-            return combinedValuesOrError.Resolve(ParseError, s => (false, message: s));
+            #endregion
+
+            #region alternative impl
+
+            //var combinedValuesOrError =
+            //  probablyAnAnimal.FlatMap(a =>
+            //  probablyRules.FlatMap(w =>
+            //  probablyDietInfo.FlatMap(t =>
+            //  probablyuserId.FlatMap(u =>
+            //  probablyTicketPrice.FlatMap(c =>
+            //  new Result<string>(BusinessLogic(a, w, t, u, c)))))));
+            //outcome = combinedValuesOrError.Resolve(x => (false, x), ParseError);
+
+            #endregion
+
+            var header = outcome.calculationFailed ? "Could not complete the calculation" : "All went well!";
+            var summary = $"{header}\n\n{outcome.result}";
+            Console.WriteLine(summary);
         }
 
         private static (bool failed, string message) ParseError(Failure error)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"An error of type '{error.Type}' occured.");
-            sb.AppendLine();
-            sb.AppendLine($"The reason for the error was given as: '{error.Reason}'");
+            sb.AppendLine($"An error of type '{error.Type}' occured. The reason for the error was given as: '{error.Reason}'");
             return (true, sb.ToString());
         }
     }

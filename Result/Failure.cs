@@ -8,9 +8,10 @@
 
     public enum FailureType
     {
-        StringNotFound,
-        BooleanNotFound,
-        DecimalNotFound,
-        GuidNotFound,
+        NoDataPresent,
+        DataCorruption,
+        ArithmericalError,
+        UserIsUnknown,
+        AnimalWasFoundDead
     }
 }
