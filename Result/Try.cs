@@ -2,7 +2,7 @@
 
 namespace Result
 {
-    public class Try<E, T> where E: class
+    public class Try<E, T> where E: class //Restriction used to detect if the 'Failure' value is present
     {
         private E Failure { get; }
         private T Ok { get; }
@@ -34,7 +34,7 @@ namespace Result
             }
         }
         
-        #region QuerySyntax Providers
+        #region Query Syntax Providers
 
         public Try<E, A> Select<A>(Func<T, A> map)
         {

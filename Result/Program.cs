@@ -5,20 +5,7 @@ namespace Result
 {
     internal static class Program
     {
-        static void Main(string[] args)
-        {
-            Result<Animal> animal = ValueFactory.TryGetTiger("Cuddles", false);
-            Result<AnimalSafetyRules> safetyRules = ValueFactory.TryGetWarning("it is an Asian Tiger", false);
-            Result<bool> eatsMeat = ValueFactory.TryGetBoolean(true, false);
-            Result<Guid> userId = ValueFactory.TryGetId(Guid.NewGuid(), false);
-            Result<decimal> admissionPrice = ValueFactory.TryGetNumber(31.41m, false);
-
-            BruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
-            RefactorBruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
-            SafelyAccessValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
-        }
-
-        static string BusinessLogic(Animal animal, AnimalSafetyRules animalAnimalSafetyRules, bool carnivore, Guid userId, decimal ticketPrice)
+        private static string BusinessLogic(Animal animal, AnimalSafetyRules animalAnimalSafetyRules, bool carnivore, Guid userId, decimal ticketPrice)
         {
             var sb = new StringBuilder();
             var glue = carnivore ? "is" : "is not";
@@ -32,6 +19,29 @@ namespace Result
             return sb.ToString();
         }
 
+        static void Main(string[] args)
+        {
+            // Get values (or errors) from elsewhere in the system. Here we simulate
+            // this by using static values.
+            Result<Animal> animal                 = ValueFactory.TryGetTiger("Cuddles", false);
+            Result<AnimalSafetyRules> safetyRules = ValueFactory.TryGetWarning("it is an Asian Tiger", false);
+            Result<bool> eatsMeat                 = ValueFactory.TryGetBoolean(true, false);
+            Result<Guid> userId                   = ValueFactory.TryGetId(Guid.NewGuid(), false);
+            Result<decimal> admissionPrice        = ValueFactory.TryGetNumber(31.41m, false);
+
+            Console.WriteLine("===============================================================\n");
+            BruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
+
+            //Console.WriteLine("===============================================================\n");
+            //RefactorBruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
+
+            Console.WriteLine("===============================================================\n");
+            SafelyAccessValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
+
+            Console.WriteLine("===============================================================\n");
+        }
+
+        // Todo: Resolve
         private static void BruteForceValues(
             Result<Animal> probablyAnAnimal,
             Result<AnimalSafetyRules> probablyRules,
@@ -72,12 +82,12 @@ namespace Result
                     }
                     else
                     {
-                        Console.WriteLine("Calculation failed: Carnivore status undetermined.");
+                        Console.WriteLine("Calculation failed: Safety procedure rules not located.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Calculation failed: Safety procedure rules not located.");
+                    Console.WriteLine("Calculation failed: Carnivore status undetermined.");
                 }
             }
             else
@@ -135,8 +145,7 @@ namespace Result
             Console.WriteLine(summary);
         }
 
-
-
+        // Todo: Flatmap, ROP and SelectMany
         private static void SafelyAccessValues(
             Result<Animal> probablyAnAnimal,
             Result<AnimalSafetyRules> probablyRules,
@@ -144,18 +153,19 @@ namespace Result
             Result<Guid> probablyuserId,
             Result<decimal> probablyTicketPrice)
         {
-            (bool calculationFailed, string result) outcome;
+            // Hacky return value just to demonstrate principle.
+            (bool calculationOk, string result) outcome;
 
-            #region impl, ROP and SelectMany
+            #region impl
 
             var combinedValuesOrError =
-                from a in probablyAnAnimal
-                from w in probablyRules
-                from t in probablyDietInfo
-                from u in probablyuserId
-                from c in probablyTicketPrice
-                select BusinessLogic(a, w, t, u, c);
-            outcome = combinedValuesOrError.Resolve(x => (false, x), ParseError);
+                from animal in probablyAnAnimal
+                from rules in probablyRules
+                from isCarnivore in probablyDietInfo
+                from userId in probablyuserId
+                from ticketPrice in probablyTicketPrice
+                select BusinessLogic(animal, rules, isCarnivore, userId, ticketPrice);
+            outcome = combinedValuesOrError.Resolve(x => (true, x), ParseError);
 
             #endregion
 
@@ -168,20 +178,20 @@ namespace Result
             //  probablyuserId.FlatMap(u =>
             //  probablyTicketPrice.FlatMap(c =>
             //  new Result<string>(BusinessLogic(a, w, t, u, c)))))));
-            //outcome = combinedValuesOrError.Resolve(x => (false, x), ParseError);
+            //outcome = combinedValuesOrError.Resolve(x => (true, x), ParseError);
 
             #endregion
 
-            var header = outcome.calculationFailed ? "Could not complete the calculation" : "All went well!";
+            var header = outcome.calculationOk ? "All went well!" : "Could not complete the calculation";
             var summary = $"{header}\n\n{outcome.result}";
             Console.WriteLine(summary);
         }
 
-        private static (bool failed, string message) ParseError(Failure error)
+        private static (bool calculationOk, string message) ParseError(Failure error)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"An error of type '{error.Type}' occured. The reason for the error was given as: '{error.Reason}'");
-            return (true, sb.ToString());
+            return (false, sb.ToString());
         }
     }
 }
