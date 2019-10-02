@@ -35,8 +35,8 @@ namespace Result
             //Console.WriteLine("===============================================================\n");
             //RefactorBruteForceValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
 
-            Console.WriteLine("===============================================================\n");
-            SafelyAccessValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
+            //Console.WriteLine("===============================================================\n");
+            //SafelyAccessValues(animal, safetyRules, eatsMeat, userId, admissionPrice);
 
             Console.WriteLine("===============================================================\n");
         }
@@ -54,7 +54,7 @@ namespace Result
             Animal animal = probablyAnAnimal.Resolve(x => x, e => { somethingFailed = true; return new Animal { Dangerous = Animal.DangerClass.Undefined, Name = "Dummy" }; });
             if (!somethingFailed)
             {
-                AnimalSafetyRules rules = probablyRules.Resolve(x => x, e => { somethingFailed = true; return new AnimalSafetyRules("Dummy", AnimalSafetyRules.DangerLevel.Benign); });
+                AnimalSafetyRules rules = probablyRules.Resolve(x => x, e => { somethingFailed = true; return new AnimalSafetyRules("Dummy", DangerLevel.Benign); });
                 if (!somethingFailed)
                 {
                     bool isCarnivore = probablyDietInfo.Resolve(x => x, e => { somethingFailed = true; return false; });
@@ -112,7 +112,7 @@ namespace Result
                 return;
             }
 
-            AnimalSafetyRules rules = probablyRules.Resolve(x => x, e => { somethingFailed = true; return new AnimalSafetyRules("Dummy", AnimalSafetyRules.DangerLevel.Benign); });
+            AnimalSafetyRules rules = probablyRules.Resolve(x => x, e => { somethingFailed = true; return new AnimalSafetyRules("Dummy", DangerLevel.Benign); });
             if (somethingFailed)
             {
                 Console.WriteLine("Calculation failed: Safety procedure rules not located.");

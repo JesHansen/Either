@@ -4,11 +4,11 @@ namespace Result
 {
     public static class ValueFactory
     {
-        public static Result<AnimalSafetyRules> TryGetWarning(string errorText, bool fail)
+        public static Result<AnimalSafetyRules> TryGetWarning(string warningText, bool fail)
         {
             return fail
                 ? new Result<AnimalSafetyRules>(new Failure { Reason = "The database field was null", Type = FailureType.NoDataPresent })
-                : new Result<AnimalSafetyRules>(new AnimalSafetyRules(errorText, AnimalSafetyRules.DangerLevel.High));
+                : new Result<AnimalSafetyRules>(new AnimalSafetyRules(warningText, DangerLevel.High));
         }
 
         public static Result<Animal> TryGetTiger(string name, bool fail)
