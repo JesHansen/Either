@@ -145,7 +145,7 @@ namespace Result
             Console.WriteLine(summary);
         }
 
-        // Todo: Flatmap, ROP and SelectMany
+        // Todo: Flatmap, ROP
         private static void SafelyAccessValues(
             Result<Animal> probablyAnAnimal,
             Result<AnimalSafetyRules> probablyRules,
@@ -159,12 +159,12 @@ namespace Result
             #region impl
 
             var combinedValuesOrError =
-                from animal in probablyAnAnimal
-                from rules in probablyRules
-                from isCarnivore in probablyDietInfo
-                from userId in probablyuserId
-                from ticketPrice in probablyTicketPrice
-                select BusinessLogic(animal, rules, isCarnivore, userId, ticketPrice);
+                probablyAnAnimal.FlatMap(a =>
+                probablyRules.FlatMap(w =>
+                probablyDietInfo.FlatMap(t =>
+                probablyuserId.FlatMap(u =>
+                probablyTicketPrice.FlatMap(c =>
+                new Result<string>(BusinessLogic(a, w, t, u, c)))))));
             outcome = combinedValuesOrError.Resolve(x => (true, x), ParseError);
 
             #endregion
@@ -172,12 +172,12 @@ namespace Result
             #region alternative impl
 
             //var combinedValuesOrError =
-            //  probablyAnAnimal.FlatMap(a =>
-            //  probablyRules.FlatMap(w =>
-            //  probablyDietInfo.FlatMap(t =>
-            //  probablyuserId.FlatMap(u =>
-            //  probablyTicketPrice.FlatMap(c =>
-            //  new Result<string>(BusinessLogic(a, w, t, u, c)))))));
+            //    from animal in probablyAnAnimal
+            //    from rules in probablyRules
+            //    from isCarnivore in probablyDietInfo
+            //    from userId in probablyuserId
+            //    from ticketPrice in probablyTicketPrice
+            //    select BusinessLogic(animal, rules, isCarnivore, userId, ticketPrice);
             //outcome = combinedValuesOrError.Resolve(x => (true, x), ParseError);
 
             #endregion

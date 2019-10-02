@@ -22,6 +22,8 @@ namespace Result
             return Failure != null ? onError(Failure) : onSuccess(Ok);
         }
 
+        #region Query Syntax Providers
+
         public void Resolve(Action<E> onError, Action<T> onSuccess)
         {
             if (Failure != null)
@@ -33,8 +35,11 @@ namespace Result
                 onSuccess(Ok);
             }
         }
-        
-        #region Query Syntax Providers
+
+        private Try<E, A> Map<A>(Func<T, A> mapSucceeded)
+        {
+            return Failure != null ? new Try<E, A>(Failure) : new Try<E, A>(mapSucceeded(Ok));
+        }
 
         public Try<E, A> Select<A>(Func<T, A> map)
         {
@@ -43,20 +48,17 @@ namespace Result
 
         public Try<E, A> SelectMany<A>(Func<T, Try<E, A>> mapToTry)
         {
+            //IEnumerable<A> SelectMany<A>(Func<T, IEnumerable<A>> mapToEnumerable)
             return FlatMap(mapToTry);
         }
 
         public Try<E, A> SelectMany<A, B>(Func<T, Try<E, B>> mapToTry, Func<T, B, A> reduce)
         {
+            //IEnumerable<A> SelectMany<A,B>(Func<T, IEnumerable<B>> mapToEnumerable, Func<T, B, A> reduce)
             return FlatMap(mapToTry).FlatMap(t => new Try<E, A>(reduce(Ok, t)));
         }
 
         #endregion
-
-        private Try<E, A> Map<A>(Func<T, A> mapSucceeded)
-        {
-            return Failure != null ? new Try<E, A>(Failure) : new Try<E, A>(mapSucceeded(Ok));
-        }
 
         public Try<E, A> FlatMap<A>(Func<T, Try<E, A>> mapSucceeded)
         {
